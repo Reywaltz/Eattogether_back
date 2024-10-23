@@ -17,7 +17,7 @@ func main() {
 		logger.Fatalf("Failed to create envReader: %v", err)
 	}
 
-	database, err := db.CreateConnection(envReader.DB_URI)
+	database, err := db.CreateConnection(envReader.DB_URL)
 	if err != nil {
 		logger.Fatalf("Failed to create db connection: %v", err)
 	}

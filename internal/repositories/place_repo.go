@@ -18,7 +18,12 @@ func (p *PlacesRepo) GetPlaces() ([]models.Place, error) {
 		return nil, err
 	}
 
-	res.Scan(&places)
+	for res.Next() {
+		var place models.Place
+		res.Scan(&place.ID, &place.Name, &place.Image)
+		places = append(places, place)
+	}
+
 	return places, nil
 }
 

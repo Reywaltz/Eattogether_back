@@ -9,7 +9,7 @@ import (
 )
 
 type EnvReader struct {
-	DB_URI     string
+	DB_URL     string
 	JWT_SECRET []byte
 }
 
@@ -25,10 +25,10 @@ func loadENV() (*EnvReader, error) {
 		return nil, errors.New("can't load .env file")
 	}
 
-	dbURI := os.Getenv("DB_URI")
+	dbURL := os.Getenv("DB_URI")
 	jwtSecret := os.Getenv("JWT_SECRET")
 
-	if dbURI == "" {
+	if dbURL == "" {
 		return nil, errors.New("DB_URI is not present in ENV variables")
 	}
 
@@ -37,7 +37,7 @@ func loadENV() (*EnvReader, error) {
 	}
 
 	return &EnvReader{
-		DB_URI:     dbURI,
+		DB_URL:     dbURL,
 		JWT_SECRET: []byte(jwtSecret),
 	}, nil
 
