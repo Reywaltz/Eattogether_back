@@ -17,7 +17,7 @@ CREATE TABLE users (
 CREATE TABLE rooms (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    created_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now() ,
     external_id UUID UNIQUE
 );
 
