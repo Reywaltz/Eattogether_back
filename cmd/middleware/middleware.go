@@ -20,7 +20,7 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 
 	return func(c echo.Context) error {
-		fmt.Println(c.Cookies())
+		fmt.Println("MIDDLEWARE")
 		cookies, err := c.Cookie("X-Auth-Token")
 		if err != nil {
 			fmt.Println(err)
@@ -29,11 +29,16 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		env_reader, _ := env.GetENVReader()
 
-		_, err = jwt.Parse(cookies.Value, func(token *jwt.Token) (interface{}, error) {
+		var claims models.JWTClaims
+
+		token, err := jwt.ParseWithClaims(cookies.Value, &claims, func(token *jwt.Token) (interface{}, error) {
 			return env_reader.JWT_SECRET, nil
 		})
 
-		if err != nil {
+		if claims, ok := token.Claims.(*models.JWTClaims); ok && token.Valid {
+			c.Set("user_id", claims.User_id)
+			c.Set("roles", claims.Roles)
+		} else {
 			fmt.Println(err)
 			return c.JSON(http.StatusBadRequest, messageError)
 		}

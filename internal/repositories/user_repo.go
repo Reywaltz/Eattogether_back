@@ -11,11 +11,20 @@ type UserRepo struct {
 	DB db.PgxInterface
 }
 
-func (p *UserRepo) GetUser() (models.User, error) {
+func (p *UserRepo) GetUser(username string, password string) (models.User, error) {
 	var user models.User
-	res := p.DB.QueryRow(context.Background(), "SELECT * FROM places")
+	res := p.DB.QueryRow(
+		context.Background(),
+		"SELECT id, username, password, role FROM users WHERE username=$1 and password=$2",
+		username,
+		password,
+	)
 
-	res.Scan(&user)
+	err := res.Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+	if err != nil {
+		return user, err
+	}
+
 	return user, nil
 }
 

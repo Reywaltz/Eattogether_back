@@ -27,6 +27,8 @@ func InitRouter(
 
 	places_group := api_group.Group("/places", custom_middleware.JWTMiddleware)
 	places_group.GET("", place_service.GetPlaces)
+	// TODO move to rooms group
+	places_group.POST("/vote", place_service.Vote)
 
 	return e
 }

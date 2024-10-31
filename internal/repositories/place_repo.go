@@ -18,9 +18,14 @@ func (p *PlacesRepo) GetPlaces() ([]models.Place, error) {
 		return nil, err
 	}
 
+	defer res.Close()
+
 	for res.Next() {
 		var place models.Place
-		res.Scan(&place.ID, &place.Name, &place.Image)
+		err = res.Scan(&place.ID, &place.Name, &place.Image)
+		if err != nil {
+			return nil, err
+		}
 		places = append(places, place)
 	}
 

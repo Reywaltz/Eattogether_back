@@ -1,3 +1,9 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+
 migrate:
 	@GOOSE_DRIVER=postgres GOOSE_DBSTRING=$(DB_URL) goose -dir=$(MIGRATION_PATH) up
 
