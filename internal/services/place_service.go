@@ -23,9 +23,32 @@ func (p *PlaceService) GetPlaces(c echo.Context) error {
 		fmt.Printf("Can't get data from db:%v\n", err)
 	}
 
-	response.Items = places
+	if places != nil {
+		response.Items = places
+	} else {
+		response.Items = []models.Place{}
+	}
 
 	c.JSON(http.StatusOK, response)
+	return nil
+}
+
+func (p *PlaceService) Vote(c echo.Context) error {
+	var body models.Vote
+
+	// TODO Vote validation
+	fmt.Println(c.Get("user_id"))
+	fmt.Println(c.Get("roles"))
+
+	err := c.Bind(&body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(body)
+
+	fmt.Println("Vote")
+	c.String(http.StatusOK, "VOTED!!!!")
 	return nil
 }
 

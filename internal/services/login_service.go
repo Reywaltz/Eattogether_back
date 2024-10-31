@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -33,27 +34,29 @@ func (l *LoginService) LoginHandler(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
-	fmt.Println(tmp.Username, tmp.Password)
-	fmt.Printf("Got login payload: %v\n", tmp)
+	row, err := l.UserRepo.GetUser(tmp.Username, tmp.Password)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return c.String(http.StatusBadRequest, "No user")
+		} else {
+			return c.String(http.StatusBadGateway, "DB error")
+		}
+	}
 
-	// TODO db fetch
-
-	payload, err := l.generateJWT(time.Hour, []Roles{ADMIN})
+	payload, err := l.generateJWT(time.Hour, row)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Can't generate JWT")
 	}
 
-	fmt.Println(payload)
-
 	return c.JSON(http.StatusCreated, &payload)
 }
 
-func (l *LoginService) generateJWT(expire time.Duration, roles []Roles) (models.JWTResponse, error) {
+func (l *LoginService) generateJWT(expire time.Duration, user models.User) (models.JWTResponse, error) {
 	exp := time.Now().Add(expire)
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"roles":   roles,
-		"user_id": 1,
+		"roles":   []string{user.Role},
+		"user_id": user.ID,
 		"exp":     exp.Unix(),
 		"iat":     time.Now().UTC().Unix(),
 	})
