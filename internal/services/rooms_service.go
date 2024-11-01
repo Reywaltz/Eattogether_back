@@ -31,8 +31,33 @@ func (r *RoomsService) GetRooms(c echo.Context) error {
 	return nil
 }
 
+func (r *RoomsService) GetRoom(c echo.Context) error {
+	userID := c.Get("user_id").(int)
+
+	if userID == 0 {
+		fmt.Println("No user id")
+		return c.String(http.StatusUnauthorized, "No user id")
+	}
+
+	roomID, err := uuid.Parse(c.Param("roomID"))
+	if err != nil {
+		fmt.Println("Can't decode uuid from path", err)
+		c.String(http.StatusNotFound, "Not found")
+		return nil
+	}
+
+	room, err := r.RoomsRepo.GetRoom(roomID)
+	if err != nil {
+		fmt.Println("Failed to get room", err)
+		c.String(http.StatusInternalServerError, "Can't create room")
+	}
+
+	return c.JSON(http.StatusOK, &room)
+
+}
+
 func (r *RoomsService) CreateRoom(c echo.Context) error {
-	user_id := c.Get("user_id").(int)
+	userID := c.Get("user_id").(int)
 
 	var roomPayload models.RoomCreatePayload
 	err := c.Bind(&roomPayload)
@@ -40,15 +65,61 @@ func (r *RoomsService) CreateRoom(c echo.Context) error {
 		fmt.Println("Can't bind", err)
 	}
 
-	external_id := uuid.New()
+	externalID := uuid.New()
 
-	err = r.RoomsRepo.CreateRoom(roomPayload.Name, external_id, user_id)
+	err = r.RoomsRepo.CreateRoom(roomPayload.Name, externalID, userID)
 	if err != nil {
 		fmt.Println("Failed to create room", err)
 		c.String(http.StatusInternalServerError, "Can't create room")
 	}
 
 	c.String(http.StatusCreated, "OK")
+	return nil
+}
+
+func (r *RoomsService) DeleteRoom(c echo.Context) error {
+	userID := c.Get("user_id").(int)
+
+	roomID, err := uuid.Parse(c.Param("roomID"))
+	if err != nil {
+		fmt.Println("Can't decode uuid from path", err)
+		c.String(http.StatusNotFound, "Not found")
+		return nil
+	}
+
+	err = r.RoomsRepo.DeleteRoom(roomID, userID)
+	if err != nil {
+		fmt.Println("Failed to delete room", err)
+		c.String(http.StatusInternalServerError, "Can't delete room")
+	}
+
+	c.String(http.StatusCreated, "OK")
+	return nil
+}
+
+func (r *RoomsService) UpdateRoom(c echo.Context) error {
+	userID := c.Get("user_id").(int)
+
+	roomID, err := uuid.Parse(c.Param("roomID"))
+	if err != nil {
+		fmt.Println("Can't decode uuid from path", err)
+	}
+
+	var updatePayload models.RoomUpdatePayload
+
+	if err := c.Bind(&updatePayload); err != nil {
+		fmt.Println("Can't bind payload", err)
+	}
+
+	fmt.Println(userID, roomID, updatePayload)
+
+	err = r.RoomsRepo.UpdateRoom(roomID, userID, updatePayload.Name)
+	if err != nil {
+		fmt.Println("Failed to update room", err)
+		c.String(http.StatusInternalServerError, "Can't update room")
+	}
+
+	c.String(http.StatusNoContent, "OK")
 	return nil
 }
 

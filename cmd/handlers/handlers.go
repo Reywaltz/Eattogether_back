@@ -34,6 +34,8 @@ func InitRouter(
 	rooms_group := api_group.Group("/rooms", custom_middleware.JWTMiddleware)
 	rooms_group.POST("", rooms_service.CreateRoom)
 	rooms_group.GET("", rooms_service.GetRooms)
-
+	rooms_group.GET("/:roomID", rooms_service.GetRoom)
+	rooms_group.DELETE("/:roomID", rooms_service.DeleteRoom)
+	rooms_group.PUT("/:roomID", rooms_service.UpdateRoom)
 	return e
 }

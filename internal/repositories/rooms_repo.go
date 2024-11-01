@@ -53,6 +53,54 @@ func (r *RoomsRepo) CreateRoom(name string, externalID uuid.UUID, ownerID int) e
 	return nil
 }
 
+func (r *RoomsRepo) DeleteRoom(roomID uuid.UUID, userID int) error {
+	_, err := r.DB.Exec(
+		context.Background(),
+		"DELETE FROM rooms WHERE external_id=$1 and owner_id=$2",
+		roomID,
+		userID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *RoomsRepo) UpdateRoom(roomID uuid.UUID, userID int, name string) error {
+	_, err := r.DB.Exec(
+		context.Background(),
+		"UPDATE rooms SET name=$1 WHERE external_id=$2 and owner_id=$3",
+		name,
+		roomID,
+		userID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *RoomsRepo) GetRoom(roomID uuid.UUID) (models.Room, error) {
+	var room models.Room
+
+	row := r.DB.QueryRow(
+		context.Background(),
+		"SELECT id, name, created_at, external_id FROM rooms WHERE external_id=$1",
+		roomID,
+	)
+
+	err := row.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID)
+	if err != nil {
+		return room, err
+	}
+
+	return room, nil
+}
+
 func CreateRoomsRepo(db *db.DB) *RoomsRepo {
 	return &RoomsRepo{
 		DB: db,

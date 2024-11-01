@@ -17,6 +17,10 @@ type RoomPayload struct {
 	Items []Room `json:"items"`
 }
 
+type RoomUpdatePayload struct {
+	Name string `json:"name"`
+}
+
 type RoomCreatePayload struct {
 	Name string `json:"name"`
 }
