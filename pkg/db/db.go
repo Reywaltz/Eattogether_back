@@ -6,10 +6,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	pgconn "github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DB struct {
-	Conn *pgx.Conn
+	Conn *pgxpool.Pool
 }
 
 type PgxInterface interface {
@@ -19,7 +20,7 @@ type PgxInterface interface {
 }
 
 func CreateConnection(connectionURI string) (*DB, error) {
-	conn, err := pgx.Connect(context.Background(), connectionURI)
+	conn, err := pgxpool.New(context.Background(), connectionURI)
 
 	if err != nil {
 		return &DB{}, errors.New("failed to connect to db")

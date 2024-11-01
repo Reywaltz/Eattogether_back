@@ -12,6 +12,7 @@ func InitRouter(
 	user_service *services.UsersService,
 	place_service *services.PlaceService,
 	login_service *services.LoginService,
+	rooms_service *services.RoomsService,
 ) *echo.Echo {
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -30,5 +31,11 @@ func InitRouter(
 	// TODO move to rooms group
 	places_group.POST("/vote", place_service.Vote)
 
+	rooms_group := api_group.Group("/rooms", custom_middleware.JWTMiddleware)
+	rooms_group.POST("", rooms_service.CreateRoom)
+	rooms_group.GET("", rooms_service.GetRooms)
+	rooms_group.GET("/:roomID", rooms_service.GetRoom)
+	rooms_group.DELETE("/:roomID", rooms_service.DeleteRoom)
+	rooms_group.PUT("/:roomID", rooms_service.UpdateRoom)
 	return e
 }
