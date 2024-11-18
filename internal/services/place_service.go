@@ -1,8 +1,10 @@
 package services
 
 import (
+	"eattogether/internal/additions"
 	"eattogether/internal/models"
 	"eattogether/internal/repositories"
+	"eattogether/pkg/customerrors"
 	env "eattogether/pkg/env"
 	"fmt"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 
 type PlaceService struct {
 	PlaceRepo *repositories.PlacesRepo
+	RoomRepo  *repositories.RoomsRepo
 	ENVReader *env.EnvReader
 }
 
@@ -34,26 +37,40 @@ func (p *PlaceService) GetPlaces(c echo.Context) error {
 }
 
 func (p *PlaceService) Vote(c echo.Context) error {
-	var body models.Vote
+	var body models.VotePayload
 
-	// TODO Vote validation
-	fmt.Println(c.Get("user_id"))
-	fmt.Println(c.Get("roles"))
-
-	err := c.Bind(&body)
+	userID, err := additions.RetriveUserAndPayload(c, &body, false)
 	if err != nil {
-		fmt.Println(err)
+		switch err.(type) {
+		case *customerrors.DataNotBindable:
+			return c.JSON(http.StatusBadRequest, models.JSONMessage{
+				Message: "wrong payload",
+			})
+
+		case *customerrors.UserNotSetError:
+			return c.JSON(http.StatusUnauthorized, models.JSONMessage{
+				Message: "User not set",
+			})
+		}
 	}
 
-	fmt.Println(body)
+	room, err := p.RoomRepo.GetRoom(body.RoomID)
+	if err != nil {
+		fmt.Printf("error during room get: %v\n", err)
+	}
 
-	fmt.Println("Vote")
+	err = p.PlaceRepo.InsertVotes(room.ID, userID, body.PlacesIDS)
+	if err != nil {
+		fmt.Printf("Can't vote: %v\n", err)
+	}
+
 	c.String(http.StatusOK, "VOTED!!!!")
 	return nil
 }
 
-func CreatePlacesService(place_repository *repositories.PlacesRepo) (*PlaceService, error) {
+func CreatePlacesService(place_repository *repositories.PlacesRepo, room_repository *repositories.RoomsRepo) (*PlaceService, error) {
 	return &PlaceService{
 		PlaceRepo: place_repository,
+		RoomRepo:  room_repository,
 	}, nil
 }

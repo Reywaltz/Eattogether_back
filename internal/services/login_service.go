@@ -37,8 +37,10 @@ func (l *LoginService) LoginHandler(c echo.Context) error {
 	row, err := l.UserRepo.GetUser(tmp.Username, tmp.Password)
 	if err != nil {
 		if err == pgx.ErrNoRows {
+			fmt.Println("No user", err)
 			return c.String(http.StatusBadRequest, "No user")
 		} else {
+			fmt.Println("DB error", err)
 			return c.String(http.StatusBadGateway, "DB error")
 		}
 	}

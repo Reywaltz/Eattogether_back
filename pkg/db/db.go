@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	pgconn "github.com/jackc/pgx/v5/pgconn"
@@ -17,6 +18,7 @@ type PgxInterface interface {
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 	Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)
+	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
 func CreateConnection(connectionURI string) (*DB, error) {
@@ -50,4 +52,14 @@ func (d *DB) Query(ctx context.Context, query string, args ...interface{}) (pgx.
 	}
 
 	return rows, nil
+}
+
+func (d *DB) Begin(ctx context.Context) (pgx.Tx, error) {
+	transaction, err := d.Conn.Begin(ctx)
+	if err != nil {
+		fmt.Printf("Failed to begin transaction: %v\n", err)
+		return nil, err
+	}
+
+	return transaction, nil
 }

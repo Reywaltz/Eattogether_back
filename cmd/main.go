@@ -27,13 +27,15 @@ func main() {
 	places_repo := repos.CreatePlaceRepo(database)
 	user_repo := repos.CreateUserRepo(database)
 	rooms_repo := repos.CreateRoomsRepo(database)
+	votes_repo := repos.CreateVotesRepo(database)
 
-	places_service, _ := services.CreatePlacesService(places_repo)
+	places_service, _ := services.CreatePlacesService(places_repo, rooms_repo)
 	users_service, _ := services.CreateUsersService(user_repo)
 	login_service, _ := services.CreateLoginService(user_repo)
 	rooms_service, _ := services.CreateRoomsService(rooms_repo)
+	votes_service, _ := services.CreateVotesService(votes_repo, rooms_repo)
 
-	e := router.InitRouter(users_service, places_service, login_service, rooms_service)
+	e := router.InitRouter(users_service, places_service, login_service, rooms_service, votes_service)
 	// TODO Correct CORS
 	go router.HandleBroadcast()
 

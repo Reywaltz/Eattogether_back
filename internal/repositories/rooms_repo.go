@@ -18,7 +18,7 @@ func (r *RoomsRepo) GetRooms(userID int) ([]models.Room, error) {
 	var rooms []models.Room
 	res, err := r.DB.Query(
 		context.Background(),
-		"SELECT id, name, created_at, external_id FROM rooms where owner_id=$1",
+		"SELECT id, name, created_at, external_id, owner_id FROM rooms where owner_id=$1",
 		userID,
 	)
 	if err != nil {
@@ -27,7 +27,7 @@ func (r *RoomsRepo) GetRooms(userID int) ([]models.Room, error) {
 
 	for res.Next() {
 		var room models.Room
-		err := res.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID)
+		err := res.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID, &room.OwnerID)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -89,11 +89,11 @@ func (r *RoomsRepo) GetRoom(roomID uuid.UUID) (models.Room, error) {
 
 	row := r.DB.QueryRow(
 		context.Background(),
-		"SELECT id, name, created_at, external_id FROM rooms WHERE external_id=$1",
+		"SELECT id, name, created_at, external_id, owner_id FROM rooms WHERE external_id=$1",
 		roomID,
 	)
 
-	err := row.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID)
+	err := row.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID, &room.OwnerID)
 	if err != nil {
 		return room, err
 	}
