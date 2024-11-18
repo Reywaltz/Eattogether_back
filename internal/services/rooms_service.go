@@ -1,8 +1,10 @@
 package services
 
 import (
+	"eattogether/internal/additions"
 	"eattogether/internal/models"
 	"eattogether/internal/repositories"
+	"eattogether/pkg/customerrors"
 	env "eattogether/pkg/env"
 	"fmt"
 	"net/http"
@@ -57,12 +59,21 @@ func (r *RoomsService) GetRoom(c echo.Context) error {
 }
 
 func (r *RoomsService) CreateRoom(c echo.Context) error {
-	userID := c.Get("user_id").(int)
-
 	var roomPayload models.RoomCreatePayload
-	err := c.Bind(&roomPayload)
+
+	userID, err := additions.RetriveUserAndPayload(c, &roomPayload, false)
 	if err != nil {
-		fmt.Println("Can't bind", err)
+		switch err.(type) {
+		case *customerrors.DataNotBindable:
+			return c.JSON(http.StatusBadRequest, models.JSONMessage{
+				Message: "wrong payload",
+			})
+
+		case *customerrors.UserNotSetError:
+			return c.JSON(http.StatusUnauthorized, models.JSONMessage{
+				Message: "User not set",
+			})
+		}
 	}
 
 	externalID := uuid.New()

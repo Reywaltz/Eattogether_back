@@ -9,7 +9,3 @@ type Place struct {
 	Name  string `json:"name"`
 	Image string `json:"image"`
 }
-
-type Vote struct {
-	Ids []string `json:"ids"`
-}

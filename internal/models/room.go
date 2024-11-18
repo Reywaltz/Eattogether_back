@@ -11,6 +11,7 @@ type Room struct {
 	Name       string    `json:"name"`
 	CreatedAt  time.Time `json:"created_at"`
 	ExternalID uuid.UUID `json:"external_id"`
+	OwnerID    int       `json:"owner_id"`
 }
 
 type RoomPayload struct {
