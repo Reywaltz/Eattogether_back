@@ -16,6 +16,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  
+  elasticsearch:
+    image: elasticsearch:8.16.1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+  
   go-api:
     build: .
     env_file: .env.docker
