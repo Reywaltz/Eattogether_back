@@ -16,18 +16,31 @@ type RoomsRepo struct {
 
 func (r *RoomsRepo) GetRooms(userID int) ([]models.Room, error) {
 	var rooms []models.Room
-	res, err := r.DB.Query(
+
+	rows, err := r.DB.Query(
 		context.Background(),
-		"SELECT id, name, created_at, external_id, owner_id FROM rooms where owner_id=$1",
+		`SELECT 
+			rooms.id,
+			rooms.name,
+			rooms.created_at,
+			rooms.external_id,
+			rooms.owner_id
+		FROM rooms_users
+		INNER JOIN rooms on rooms.id = rooms_users.room_id 
+		WHERE rooms_users.user_id = $1`,
 		userID,
 	)
+
 	if err != nil {
+		fmt.Printf("error during query: %v\n", err)
 		return nil, err
 	}
 
-	for res.Next() {
+	defer rows.Close()
+
+	for rows.Next() {
 		var room models.Room
-		err := res.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID, &room.OwnerID)
+		err := rows.Scan(&room.ID, &room.Name, &room.CreatedAt, &room.ExternalID, &room.OwnerID)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -99,6 +112,42 @@ func (r *RoomsRepo) GetRoom(roomID uuid.UUID) (models.Room, error) {
 	}
 
 	return room, nil
+}
+
+func (r *RoomsRepo) GetUsersByRoom(roomID int) ([]models.User, error) {
+	var users []models.User
+
+	rows, err := r.DB.Query(
+		context.Background(),
+		`SELECT 
+			users.id,
+			users.username,
+			users.role
+		FROM rooms_users
+		INNER JOIN users on users.id = rooms_users.user_id 
+		WHERE rooms_users.room_id = $1`,
+		roomID,
+	)
+
+	if err != nil {
+		fmt.Printf("error during query: %v\n", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var user models.User
+
+		err := rows.Scan(&user.ID, &user.Username, &user.Role)
+		if err != nil {
+			fmt.Printf("Error during scan: %v\n", err)
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }
 
 func CreateRoomsRepo(db *db.DB) *RoomsRepo {

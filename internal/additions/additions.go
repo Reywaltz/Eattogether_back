@@ -27,7 +27,5 @@ func RetriveUserAndPayload(c echo.Context, bindInterface interface{}, skipBind b
 		}
 	}
 
-	fmt.Println(bindInterface)
-
 	return userID, nil
 }

@@ -76,7 +76,14 @@ func (v *VotesService) GetVotingResult(c echo.Context) error {
 
 	result, _ := v.VotesRepo.GetVotingResultByRoom(room.ID)
 
-	return c.JSON(http.StatusOK, result)
+	var response models.VoteResult
+	if result != nil {
+		response.Items = result
+	} else {
+		response.Items = []models.VoteResultItem{}
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func CreateVotesService(
