@@ -20,7 +20,11 @@ type UserVotePayload struct {
 	Items []Vote `json:"items"`
 }
 
-type VoteResult struct {
+type VoteResultItem struct {
 	Name  string `json:"name"`
 	Count int    `json:"count"`
+}
+
+type VoteResult struct {
+	Items []VoteResultItem `json:"items"`
 }

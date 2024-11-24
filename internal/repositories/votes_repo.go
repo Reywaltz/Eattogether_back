@@ -38,7 +38,7 @@ func (v *VotesRepo) GetVotesByUser(userID int, roomID int) ([]models.Vote, error
 	return votes, nil
 }
 
-func (v *VotesRepo) GetVotingResultByRoom(roomID int) ([]models.VoteResult, error) {
+func (v *VotesRepo) GetVotingResultByRoom(roomID int) ([]models.VoteResultItem, error) {
 
 	res, err := v.DB.Query(
 		context.Background(),
@@ -59,9 +59,9 @@ func (v *VotesRepo) GetVotingResultByRoom(roomID int) ([]models.VoteResult, erro
 
 	defer res.Close()
 
-	var result []models.VoteResult
+	var result []models.VoteResultItem
 	for res.Next() {
-		var votingResult models.VoteResult
+		var votingResult models.VoteResultItem
 		err := res.Scan(&votingResult.Name, &votingResult.Count)
 		if err != nil {
 			fmt.Printf("Scan error: %v\n", err)

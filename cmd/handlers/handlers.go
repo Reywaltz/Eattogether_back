@@ -42,5 +42,9 @@ func InitRouter(
 	votes_group := api_group.Group("/votes", custom_middleware.JWTMiddleware)
 	votes_group.GET("/:roomID", votes_service.GetUserVotes)
 	votes_group.GET("/:roomID/result", votes_service.GetVotingResult)
+
+	user_group := api_group.Group("/users", custom_middleware.JWTMiddleware)
+	user_group.GET("", user_service.GetUsersByRoom)
+
 	return e
 }
