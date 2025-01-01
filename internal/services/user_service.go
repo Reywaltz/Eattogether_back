@@ -1,8 +1,10 @@
 package services
 
 import (
+	"eattogether/internal/additions"
 	"eattogether/internal/models"
 	"eattogether/internal/repositories"
+	"eattogether/pkg/elastic"
 	"fmt"
 	"net/http"
 
@@ -11,8 +13,9 @@ import (
 )
 
 type UsersService struct {
-	UserRepo  *repositories.UserRepo
-	RoomsRepo *repositories.RoomsRepo
+	UserRepo      *repositories.UserRepo
+	RoomsRepo     *repositories.RoomsRepo
+	ElasticClient *elastic.ElasticClient
 }
 
 func (u *UsersService) GetUsersByRoom(c echo.Context) error {
@@ -36,9 +39,42 @@ func (u *UsersService) GetUsersByRoom(c echo.Context) error {
 
 }
 
-func CreateUsersService(user_repo *repositories.UserRepo, rooms_repo *repositories.RoomsRepo) (*UsersService, error) {
+func (u *UsersService) SearchUsers(c echo.Context) error {
+	search_param := c.QueryParam("user_search")
+	query := fmt.Sprintf(
+		`{"query": {"match_phrase_prefix": {"name": {"query": "%s"}}}}`,
+		search_param,
+	)
+
+	result, err := u.ElasticClient.Search("users", query)
+	if err != nil {
+		fmt.Printf("Error during elastic call: %v\n", err)
+		c.JSON(http.StatusBadGateway, models.JSONMessage{
+			Message: "Internal Error",
+		})
+		return err
+	}
+
+	var user models.ElasticUser
+
+	results := additions.ParseElasticResult(result, user)
+	if len(results) == 0 {
+		c.JSON(http.StatusOK, []models.ElasticUser{})
+		return nil
+	}
+
+	c.JSON(http.StatusOK, results)
+	return nil
+}
+
+func CreateUsersService(
+	user_repo *repositories.UserRepo,
+	rooms_repo *repositories.RoomsRepo,
+	elastic_client *elastic.ElasticClient,
+) (*UsersService, error) {
 	return &UsersService{
-		UserRepo:  user_repo,
-		RoomsRepo: rooms_repo,
+		UserRepo:      user_repo,
+		RoomsRepo:     rooms_repo,
+		ElasticClient: elastic_client,
 	}, nil
 }

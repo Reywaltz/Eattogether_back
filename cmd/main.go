@@ -5,8 +5,10 @@ import (
 	repos "eattogether/internal/repositories"
 	"eattogether/internal/services"
 	db "eattogether/pkg/db"
+	elastic "eattogether/pkg/elastic"
 	"eattogether/pkg/env"
 	"eattogether/pkg/logger"
+	"fmt"
 )
 
 func main() {
@@ -19,10 +21,14 @@ func main() {
 
 	database, err := db.CreateConnection(envReader.DB_URL)
 	if err != nil {
-		logger.Fatalf("Failed to create db connection: %v", err)
+		panic(fmt.Sprintf("Failed to create db connection: %v", err))
 	}
-
 	logger.Info("Connected to db: %v", database)
+
+	elastic, err := elastic.CreateElasticClient()
+	if err != nil {
+		panic(fmt.Sprintf("Can't connect to elastic: %v", err))
+	}
 
 	places_repo := repos.CreatePlaceRepo(database)
 	user_repo := repos.CreateUserRepo(database)
@@ -30,7 +36,7 @@ func main() {
 	votes_repo := repos.CreateVotesRepo(database)
 
 	places_service, _ := services.CreatePlacesService(places_repo, rooms_repo)
-	users_service, _ := services.CreateUsersService(user_repo, rooms_repo)
+	users_service, _ := services.CreateUsersService(user_repo, rooms_repo, elastic)
 	login_service, _ := services.CreateLoginService(user_repo)
 	rooms_service, _ := services.CreateRoomsService(rooms_repo)
 	votes_service, _ := services.CreateVotesService(votes_repo, rooms_repo)

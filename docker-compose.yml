@@ -25,6 +25,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xmx4g
   
   go-api:
     build: .
@@ -35,3 +36,40 @@ services:
     depends_on: 
       db:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`example.local`)" # Replace with your domain
+      - "traefik.http.services.app.loadbalancer.server.port=80"
+
+  # traefik:
+  #   image: traefik:latest
+  #   command:
+  #     - "--api.insecure=true" # Enable Traefik dashboard (for development)
+  #     - "--providers.docker=true" # Enable Docker/Podman provider
+  #     - "--entrypoints.web.address=:80" # Define HTTP entrypoint
+  #   ports:
+  #     - "80:80"  # HTTP
+  #     - "443:443"
+  #     - "8080:8080"  # Traefik dashboard
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro  # Socket for container communication
+  #     - ./traefic/config/traefik.yaml:/etc/traefik/traefik.yaml
+  #   restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_ssl
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt/live:rw
+      - ./nginx/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $!; done;'"

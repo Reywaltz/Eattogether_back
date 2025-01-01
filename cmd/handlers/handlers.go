@@ -19,6 +19,7 @@ func InitRouter(
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials:                         true,
+		AllowOrigins:                             []string{"*"},
 		UnsafeWildcardOriginWithAllowCredentials: true,
 	}))
 
@@ -44,7 +45,9 @@ func InitRouter(
 	votes_group.GET("/:roomID/result", votes_service.GetVotingResult)
 
 	user_group := api_group.Group("/users", custom_middleware.JWTMiddleware)
+	// TODO поменять адрес на другой
 	user_group.GET("", user_service.GetUsersByRoom)
+	user_group.GET("/search", user_service.SearchUsers)
 
 	return e
 }

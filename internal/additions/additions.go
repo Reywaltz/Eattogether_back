@@ -1,7 +1,9 @@
 package additions
 
 import (
+	"eattogether/internal/models"
 	"eattogether/pkg/customerrors"
+	"encoding/json"
 	"fmt"
 
 	"github.com/labstack/echo/v4"
@@ -28,4 +30,20 @@ func RetriveUserAndPayload(c echo.Context, bindInterface interface{}, skipBind b
 	}
 
 	return userID, nil
+}
+
+func ParseElasticResult[T any](esResult *models.ElasticResponse, bindInterface T) []T {
+	if esResult.Hits.Total.Value == 0 {
+		return nil
+	}
+
+	var results []T
+	for _, hit := range esResult.Hits.Hits {
+		var result T
+		tmp, _ := json.Marshal(hit.Source)
+		json.Unmarshal(tmp, &result)
+		results = append(results, result)
+	}
+
+	return results
 }
